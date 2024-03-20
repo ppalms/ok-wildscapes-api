@@ -1,0 +1,44 @@
+name: dev
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    concurrency: dev-environment
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.DEPLOYMENT_ROLE }}
+          role-session-name: GithubActionsSession
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Deploy temp environment
+        run: |
+          npx sls deploy --stage dev-ci --param="ssm-stage=dev"
+          npx sls export-env --all --stage dev-ci --param="ssm-stage=dev"
+
+      - name: Run e2e tests
+        run: yarn jest ./tests/test_cases/e2e --silent
+
+      - name: Destroy temp environment
+        run: yarn sls remove --stage dev-ci --param="ssm-stage=dev"
+
+      - name: Deploy to dev
+        run: yarn sls deploy --stage dev

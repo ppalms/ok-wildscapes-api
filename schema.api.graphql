@@ -1,0 +1,39 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  listConsultations(limit: Int!): [ConsultationRequest]!
+}
+
+type Mutation {
+  requestConsultation(consultationRequest: ConsultationRequestInput!): ID
+}
+
+type ConsultationRequest {
+  consultationId: ID!
+  firstName: String!
+  lastName: String!
+  email: AWSEmail!
+  phone: String!
+  zipCode: String!
+  projectSize: ProjectSize!
+  message: String!
+}
+
+input ConsultationRequestInput {
+  firstName: String!
+  lastName: String!
+  email: AWSEmail!
+  phone: String! # TODO use AWSPhoneNumber (requires formatting in client/resolver)
+  zipCode: String! # TODO AWSPostalCode!
+  projectSize: ProjectSize!
+  message: String!
+}
+
+enum ProjectSize {
+  UNDER_1K
+  _1K_TO_2K
+  OVER_2K
+}
