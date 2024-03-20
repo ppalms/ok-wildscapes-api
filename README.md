@@ -1,5 +1,7 @@
 # Oklahoma Wildscapes API
 
+[![dev](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/dev.yml/badge.svg)](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/dev.yml)
+
 ## Getting Started
 
 ### Prerequisites
