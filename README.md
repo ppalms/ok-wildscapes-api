@@ -14,6 +14,6 @@
 ### Local Dev Setup
 
 - Copy your AWS admin credentials from the AWS access portal into your `.aws/credentials` file
-- Run `yarn bootstrap`
+- Run `yarn bootstrap` to deploy to your AWS account and set local environment variables
 - Verify deployment in the AWS console or by running `yarn test:e2e`
-- Enjoy
+- Run `yarn sls deploy` to push changes to your dev environment
