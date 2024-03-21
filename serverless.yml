@@ -22,11 +22,6 @@ package:
 
 custom:
   name: ok-wildscapes
-  manifest:
-    postProcess: ./utils/processManifest.js
-    disablePostDeployGeneration: true
-    disableOutput: true
-    silent: true
   logLevel:
     dev: ALL
     test: ALL
