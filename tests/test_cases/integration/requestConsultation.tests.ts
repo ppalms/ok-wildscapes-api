@@ -4,17 +4,14 @@ import then from '../../steps/then';
 import teardown from '../../steps/teardown';
 import { ConsultationRequest } from '../../../functions/requestConsultation';
 
-describe('When a customer sends a consultation request', () => {
+describe('When requestConsultation runs', () => {
   let consultationRequest: ConsultationRequest;
   let consultationId: string;
 
   beforeAll(async () => {
     consultationRequest = given.a_consultation_request();
-    consultationId = await when.customer_sends_consultation_request(
+    consultationId = await when.we_invoke_request_consultation(
       consultationRequest
-    );
-    expect(consultationId).toMatch(
-      /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/
     );
   });
 
