@@ -1,13 +1,13 @@
-name: dev
+name: prod
 
 on:
-  pull_request:
-    branches:
-      - main
+  release:
+    types:
+      - published
 
 jobs:
   deploy:
-    concurrency: dev-environment
+    concurrency: prod-environment
     runs-on: ubuntu-latest
 
     permissions:
@@ -23,7 +23,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-east-1
-          role-to-assume: ${{ secrets.DEV_DEPLOYMENT_ROLE }}
+          role-to-assume: ${{ secrets.PROD_DEPLOYMENT_ROLE }}
           role-session-name: GithubActionsSession
 
       - name: Install dependencies
@@ -31,8 +31,8 @@ jobs:
 
       - name: Deploy temp environment
         run: |
-          yarn sls deploy --stage dev-ci --param="ssm-stage=dev"
-          yarn sls export-env --all --stage dev-ci --param="ssm-stage=dev"
+          yarn sls deploy --stage staging --param="ssm-stage=prod"
+          yarn sls export-env --all --stage staging --param="ssm-stage=prod"
 
       - name: Run integration tests
         run: yarn jest ./tests/test_cases/integration --silent
@@ -41,7 +41,7 @@ jobs:
         run: yarn jest ./tests/test_cases/e2e --silent
 
       - name: Destroy temp environment
-        run: yarn sls remove --stage dev-ci --param="ssm-stage=dev"
+        run: yarn sls remove --stage staging --param="ssm-stage=prod"
 
-      - name: Deploy to dev
-        run: yarn sls deploy --stage dev
+      - name: Deploy to prod
+        run: yarn sls deploy --stage prod
