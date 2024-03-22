@@ -1,6 +1,6 @@
 # Oklahoma Wildscapes API
 
-[![dev](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/dev.yml/badge.svg)](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/dev.yml)
+[![dev](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/dev.yml/badge.svg)](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/dev.yml) [![prod](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/prod.yml/badge.svg)](https://github.com/ppalms/ok-wildscapes-api/actions/workflows/prod.yml)
 
 ## Getting Started
 
