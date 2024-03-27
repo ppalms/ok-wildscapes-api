@@ -4,18 +4,9 @@ import * as dynamodb from '@aws-sdk/client-dynamodb';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { v4 } from 'uuid';
+import { ConsultationRequest } from '../src/generated/graphql';
 
-export interface ConsultationRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  zipCode: string;
-  projectSize: string;
-  message: string;
-}
-
-const { SERVICE_NAME, TABLE_NAME, SHARED_SERVICES_ROLE_ARN } = process.env;
+const { SERVICE_NAME, TABLE_NAME, SERVICE_ROLE_ARN } = process.env;
 const logger = new Logger({ serviceName: SERVICE_NAME });
 
 export const handler = async (event: {
@@ -24,10 +15,10 @@ export const handler = async (event: {
   logger.info(
     `Received consultation request ${JSON.stringify(event.arguments)}`
   );
-  let consultationRequest: ConsultationRequest;
+  let consultationReq: ConsultationRequest;
 
   try {
-    consultationRequest = <ConsultationRequest>event.arguments;
+    consultationReq = <ConsultationRequest>event.arguments;
   } catch (error) {
     logger.error('Invalid request', error as Error);
 
@@ -41,8 +32,8 @@ export const handler = async (event: {
     const stsClient = new sts.STSClient({ region: 'us-east-1' });
     const assumedRole = await stsClient.send(
       new sts.AssumeRoleCommand({
-        RoleArn: SHARED_SERVICES_ROLE_ARN,
-        RoleSessionName: `WorkloadAccess_${consultationId}`,
+        RoleArn: SERVICE_ROLE_ARN,
+        RoleSessionName: `WorkloadAccess_${consultationId}`
       })
     );
 
@@ -63,35 +54,45 @@ export const handler = async (event: {
       credentials: {
         accessKeyId,
         secretAccessKey,
-        sessionToken,
+        sessionToken
       },
-      region: 'us-east-1',
+      region: 'us-east-1'
     });
     await sesClient.send(
       new ses.SendEmailCommand({
         Source: 'no-reply@okwildscapes.com',
         Destination: {
-          ToAddresses: ['patrick@okwildscapes.com'],
+          ToAddresses: ['patrick@okwildscapes.com']
         },
         Message: {
           Subject: {
-            Data: 'New consultation request',
+            Data: `Consultation request - ${consultationReq.firstName} ${consultationReq.lastName}`
           },
           Body: {
             Html: {
-              Data: `<h1>New consultation request</h1>
+              Charset: 'UTF-8',
+              Data: `<h1>New consultation request 🚀</h1>
 <div>
   <p>
-    Name: ${consultationRequest.firstName} ${consultationRequest.lastName}<br />
-    Email: ${consultationRequest.email}<br />
-    Phone: ${consultationRequest.phone}<br />
-    Project Size: ${consultationRequest.projectSize}<br />
-    Message: ${consultationRequest.message}
+    Name: ${consultationReq.firstName} ${consultationReq.lastName}<br />
+    Email: ${consultationReq.email}<br />
+    Phone: ${consultationReq.phone}<br />
+    Project Size: ${consultationReq.projectSize}<br />
+    Message: ${consultationReq.message}
   </p>
-</div>`,
+</div>`
             },
-          },
-        },
+            Text: {
+              Charset: 'UTF-8',
+              Data: `New consultation request
+Name: ${consultationReq.firstName} ${consultationReq.lastName}
+Email: ${consultationReq.email}
+Phone: ${consultationReq.phone}
+Project Size: ${consultationReq.projectSize}
+Message: ${consultationReq.message}`
+            }
+          }
+        }
       })
     );
   } catch (error) {
@@ -102,20 +103,20 @@ export const handler = async (event: {
   try {
     const dbClient = new dynamodb.DynamoDBClient();
 
-    const consultationRequestItem = {
+    const consultationReqItem = {
       PK: `CONSULTATION#${consultationId}`,
       SK: 'REQUEST',
-      ...consultationRequest,
-      createdAt: new Date().toISOString(),
+      ...consultationReq,
+      createdAt: new Date().toISOString()
     };
 
     const putItemCommand = new dynamodb.PutItemCommand({
       TableName: TABLE_NAME!,
-      Item: marshall(consultationRequestItem),
+      Item: marshall(consultationReqItem)
     });
 
     await dbClient.send(putItemCommand);
-    logger.info(`Saved consultation request ${consultationRequestItem.PK}`);
+    logger.info(`Saved consultation request ${consultationReqItem.PK}`);
 
     return consultationId;
   } catch (error) {

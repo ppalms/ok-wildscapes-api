@@ -7,7 +7,7 @@ provider:
   architecture: arm64
   environment:
     SERVICE_NAME: ${self:service}
-    SHARED_SERVICES_ROLE_ARN: ${self:custom.serviceRoleArn}
+    SERVICE_ROLE_ARN: ${self:custom.serviceRoleArn}
     SSM_STAGE: ${param:ssm-stage, sls:stage}
 
 plugins:

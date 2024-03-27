@@ -11,8 +11,8 @@ const a_consultation = async (consultationId: string) => {
       TableName: TABLE_NAME,
       Key: {
         PK: `CONSULTATION#${consultationId}`,
-        SK: `REQUEST`,
-      },
+        SK: `REQUEST`
+      }
     })
   );
   console.log(`[${consultationId}] - consultation deleted`);
