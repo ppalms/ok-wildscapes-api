@@ -6,11 +6,11 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "sls": "sls",
+    "codegen": "graphql-codegen --config codegen.ts",
     "export-env": "sls export-env --all",
-    "bootstrap": "sls deploy && yarn export-env",
+    "bootstrap": "graphql-codegen --config codegen.ts && sls deploy && sls export-env --all",
     "test:integration": "jest ./tests/test_cases/integration",
-    "test:e2e": "jest ./tests/test_cases/e2e",
-    "codegen": "graphql-codegen"
+    "test:e2e": "jest ./tests/test_cases/e2e"
   },
   "devDependencies": {
     "@aws-appsync/utils": "^1.7.0",
@@ -21,7 +21,6 @@
     "@aws-sdk/util-dynamodb": "^3.535.0",
     "@graphql-codegen/cli": "5.0.2",
     "@graphql-codegen/typescript": "4.0.6",
-    "@graphql-codegen/typescript-resolvers": "4.0.6",
     "@types/aws-lambda": "^8.10.136",
     "@types/chance": "^1.1.6",
     "@types/jest": "^29.5.12",
