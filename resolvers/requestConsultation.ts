@@ -1,6 +1,9 @@
 import { Context, LambdaRequest } from '@aws-appsync/utils';
+import { MutationRequestConsultationArgs } from '../src/generated/graphql';
 
-export const request = (ctx: Context): LambdaRequest => {
+export const request = (
+  ctx: Context<MutationRequestConsultationArgs>
+): LambdaRequest => {
   const request: LambdaRequest = {
     operation: 'Invoke',
     payload: {
