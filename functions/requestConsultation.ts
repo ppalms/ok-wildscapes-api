@@ -106,7 +106,8 @@ const handler = async (event: {
             },
             Text: {
               Charset: 'UTF-8',
-              Data: `New consultation request
+              Data: `Project Details
+              
 Name: ${request.firstName} ${request.lastName}
 Email: ${request.email}
 Phone: ${request.phone}
