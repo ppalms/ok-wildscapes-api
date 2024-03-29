@@ -1,7 +1,8 @@
-import { ConsultationRequest } from '../../functions/requestConsultation';
 import { GraphQL } from '../lib/graphql';
 require('dotenv').config({ path: '.env.test.local' });
 require('dotenv').config({ path: '.env' });
+import { ConsultationRequest } from '../../src/generated/graphql';
+
 const { GraphQlApiUrl, GraphQlApiPublicKey } = process.env;
 
 const we_invoke_request_consultation = async (
@@ -12,7 +13,7 @@ const we_invoke_request_consultation = async (
   );
 
   const result = await requestConsultation.handler({
-    arguments: consultationRequest,
+    arguments: consultationRequest
   });
 
   return result;
@@ -33,8 +34,8 @@ const a_customer_requests_consultation = async (
       phone: consultationRequest.phone,
       zipCode: consultationRequest.zipCode,
       projectSize: consultationRequest.projectSize,
-      message: consultationRequest.message,
-    },
+      message: consultationRequest.message
+    }
   };
 
   const data = await GraphQL(
@@ -84,5 +85,5 @@ const a_user_calls_listConsultations = async () => {
 export default {
   we_invoke_request_consultation,
   a_customer_requests_consultation,
-  a_user_calls_listConsultations,
+  a_user_calls_listConsultations
 };

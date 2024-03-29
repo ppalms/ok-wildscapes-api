@@ -1,5 +1,5 @@
 import { Chance } from 'chance';
-import { ConsultationRequest } from '../../functions/requestConsultation';
+import { ConsultationRequest, ProjectSize } from '../../src/generated/graphql';
 const chance = new Chance();
 
 const a_random_client = () => {
@@ -7,7 +7,7 @@ const a_random_client = () => {
   const lastName = chance.last({ nationality: 'en' });
   const suffix = chance.string({
     length: 6,
-    pool: 'abcdefghijklmnopqrstuvwxyz',
+    pool: 'abcdefghijklmnopqrstuvwxyz'
   });
   const email = `${firstName}-${lastName}-${suffix}@test.com`;
   const phone = chance.phone({ formatted: false, mobile: true });
@@ -18,20 +18,21 @@ const a_random_client = () => {
     lastName,
     email,
     phone,
-    zipCode,
+    zipCode
   };
 };
 
 const a_consultation_request = (): ConsultationRequest => {
   const client = a_random_client();
   const consultationRequest = {
+    consultationId: chance.guid(),
     firstName: client.firstName,
     lastName: client.lastName,
     email: client.email,
     phone: client.phone,
     zipCode: client.zipCode,
-    projectSize: 'UNDER_1K',
-    message: chance.sentence({ words: 10 }),
+    projectSize: ProjectSize.Under_1K,
+    message: chance.sentence({ words: 10 })
   };
   return consultationRequest;
 };

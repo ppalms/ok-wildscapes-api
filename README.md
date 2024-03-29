@@ -17,3 +17,11 @@
 - Run `yarn bootstrap` to deploy to your AWS account and set local environment variables
 - Verify deployment in the AWS console or by running `yarn test:e2e`
 - Run `yarn sls deploy` to push changes to your dev environment
+
+## Making Changes
+
+### GraphQL and Codegen
+
+This project uses the [GraphQL-Codegen](https://the-guild.dev/graphql/codegen/docs/getting-started) library to translate GraphQL object types into TypeScript types for functions, resolvers, and automated tests. When modifying the API, start by adding or updating the relevant types in the `schema.api.graphql` file.
+
+After making the desired changes, run `yarn codegen` to automatically generate TypeScript types in the `src/generated/graphql.ts` file. This file can then be imported by Lambda functions, AppSync resolvers, and automated tests.

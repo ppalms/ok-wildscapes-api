@@ -1,16 +1,17 @@
 import { Context, DynamoDBScanRequest } from '@aws-appsync/utils';
+import { ConsultationRequest } from '../src/generated/graphql';
 
-export const request = (ctx: Context) => {
+export const request = (ctx: Context): DynamoDBScanRequest => {
   const request: DynamoDBScanRequest = {
     operation: 'Scan',
     limit: ctx.args.limit,
-    consistentRead: false,
+    consistentRead: false
   };
 
   return request;
 };
 
-export const response = (ctx: Context) => {
+export const response = (ctx: Context): ConsultationRequest[] => {
   return ctx.result.items.map((ddbItem: any) => ({
     consultationId: ddbItem.PK.split('#')[1],
     firstName: ddbItem.firstName,
@@ -19,6 +20,6 @@ export const response = (ctx: Context) => {
     phone: ddbItem.phone,
     zipCode: ddbItem.zipCode,
     projectSize: ddbItem.projectSize,
-    message: ddbItem.message,
+    message: ddbItem.message
   }));
 };

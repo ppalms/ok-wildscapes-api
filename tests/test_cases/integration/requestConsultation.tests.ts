@@ -2,17 +2,15 @@ import given from '../../steps/given';
 import when from '../../steps/when';
 import then from '../../steps/then';
 import teardown from '../../steps/teardown';
-import { ConsultationRequest } from '../../../functions/requestConsultation';
+import { ConsultationRequest } from '../../../src/generated/graphql';
 
 describe('When requestConsultation runs', () => {
-  let consultationRequest: ConsultationRequest;
+  let consultationReq: ConsultationRequest;
   let consultationId: string;
 
   beforeAll(async () => {
-    consultationRequest = given.a_consultation_request();
-    consultationId = await when.we_invoke_request_consultation(
-      consultationRequest
-    );
+    consultationReq = given.a_consultation_request();
+    consultationId = await when.we_invoke_request_consultation(consultationReq);
   });
 
   afterAll(async () => {
@@ -20,20 +18,19 @@ describe('When requestConsultation runs', () => {
   });
 
   it('The consultation request is added to the database', async () => {
-    const ddbConsultationRequest = await then.consultation_exists_in_DynamoDB(
-      consultationId
-    );
+    const ddbConsultationReq =
+      await then.consultation_exists_in_DynamoDB(consultationId);
 
-    expect(ddbConsultationRequest).toMatchObject({
+    expect(ddbConsultationReq).toMatchObject({
       PK: `CONSULTATION#${consultationId}`,
       SK: `REQUEST`,
-      firstName: consultationRequest.firstName,
-      lastName: consultationRequest.lastName,
-      email: consultationRequest.email,
-      phone: consultationRequest.phone,
-      zipCode: consultationRequest.zipCode,
-      projectSize: consultationRequest.projectSize,
-      message: consultationRequest.message,
+      firstName: consultationReq.firstName,
+      lastName: consultationReq.lastName,
+      email: consultationReq.email,
+      phone: consultationReq.phone,
+      zipCode: consultationReq.zipCode,
+      projectSize: consultationReq.projectSize,
+      message: consultationReq.message
     });
   });
 });
