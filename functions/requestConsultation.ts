@@ -3,19 +3,43 @@ import * as ses from '@aws-sdk/client-ses';
 import * as dynamodb from '@aws-sdk/client-dynamodb';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { marshall } from '@aws-sdk/util-dynamodb';
+import { Context } from 'aws-lambda';
+import middy from '@middy/core';
+import ssm from '@middy/ssm';
 import { v4 } from 'uuid';
 import { ConsultationRequestInput } from '../src/generated/graphql';
 
-const { SERVICE_NAME, TABLE_NAME, SERVICE_ROLE_ARN, AWS_DEFAULT_REGION } =
-  process.env;
+const {
+  SERVICE_NAME,
+  SSM_STAGE,
+  TABLE_NAME,
+  SERVICE_ROLE_ARN,
+  AWS_DEFAULT_REGION,
+  INTEG_TEST
+} = process.env;
+
 const logger = new Logger({ serviceName: SERVICE_NAME });
 
-const handler = async (event: {
-  arguments: ConsultationRequestInput;
-}): Promise<string | undefined> => {
-  logger.info(
-    `Received consultation request ${JSON.stringify(event.arguments)}`
-  );
+let middyCacheEnabled = INTEG_TEST
+  ? false
+  : JSON.parse(process.env.MIDDY_CACHE_ENABLED);
+
+let middyCacheExpiration = INTEG_TEST
+  ? 0
+  : JSON.parse(process.env.MIDDY_CACHE_EXPIRATION_MILLISECONDS);
+
+const lambdaHandler = async (
+  event: {
+    arguments: ConsultationRequestInput;
+  },
+  context: Context & {
+    config: {
+      noReplyEmail: string;
+      contactEmail: string;
+      basecampEmail: string;
+    };
+  }
+): Promise<string | undefined> => {
   let request: ConsultationRequestInput;
   try {
     request = <ConsultationRequestInput>event.arguments;
@@ -29,7 +53,6 @@ const handler = async (event: {
 
   try {
     const ddbClient = new dynamodb.DynamoDBClient();
-
     const consultationReqItem = {
       PK: `CONSULTATION#${consultationId}`,
       SK: 'REQUEST',
@@ -61,7 +84,6 @@ const handler = async (event: {
     const accessKeyId = assumedRole.Credentials?.AccessKeyId;
     const secretAccessKey = assumedRole.Credentials?.SecretAccessKey;
     const sessionToken = assumedRole.Credentials?.SessionToken;
-
     if (!accessKeyId || !secretAccessKey || !sessionToken) {
       logger.critical(
         'Failed to assume service role',
@@ -79,12 +101,13 @@ const handler = async (event: {
       },
       region: AWS_DEFAULT_REGION
     });
+
     await sesClient.send(
       new ses.SendEmailCommand({
-        Source: 'no-reply@okwildscapes.com',
+        Source: context.config.noReplyEmail,
         Destination: {
-          ToAddresses: ['patrick@okwildscapes.com'],
-          BccAddresses: ['save-96Kpu69SrAcm@3.basecamp.com']
+          ToAddresses: [context.config.contactEmail],
+          BccAddresses: [context.config.basecampEmail]
         },
         Message: {
           Subject: {
@@ -107,7 +130,7 @@ const handler = async (event: {
             Text: {
               Charset: 'UTF-8',
               Data: `Project Details
-              
+
 Name: ${request.firstName} ${request.lastName}
 Email: ${request.email}
 Phone: ${request.phone}
@@ -126,4 +149,15 @@ Message: ${request.message}`
   return consultationId;
 };
 
-export { handler };
+export const handler = middy()
+  .use(
+    ssm({
+      cache: middyCacheEnabled,
+      cacheExpiry: middyCacheExpiration,
+      setToContext: true,
+      fetchData: {
+        config: `/${SERVICE_NAME}/${SSM_STAGE}/config`
+      }
+    })
+  )
+  .handler(lambdaHandler);
