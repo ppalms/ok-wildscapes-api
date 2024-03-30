@@ -9,7 +9,7 @@
     "codegen": "graphql-codegen --config codegen.ts",
     "export-env": "sls export-env --all",
     "bootstrap": "graphql-codegen --config codegen.ts && sls deploy && sls export-env --all",
-    "test:integration": "cross-env IS_TEST=true jest ./tests/test_cases/integration",
+    "test:integration": "cross-env INTEG_TEST=true jest ./tests/test_cases/integration",
     "test:e2e": "jest ./tests/test_cases/e2e"
   },
   "devDependencies": {

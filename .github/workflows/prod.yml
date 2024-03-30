@@ -35,7 +35,7 @@ jobs:
           yarn sls export-env --all --stage staging --param="ssm-stage=prod"
 
       - name: Run integration tests
-        run: yarn jest ./tests/test_cases/integration --silent
+        run: yarn cross-env INTEG_TEST=true jest ./tests/test_cases/integration --silent
 
       - name: Run e2e tests
         run: yarn jest ./tests/test_cases/e2e --silent

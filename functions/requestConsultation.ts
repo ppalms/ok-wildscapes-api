@@ -15,17 +15,18 @@ const {
   TABLE_NAME,
   SERVICE_ROLE_ARN,
   AWS_DEFAULT_REGION,
-  IS_TEST
+  INTEG_TEST
 } = process.env;
 
-const middyCacheEnabled = IS_TEST
+const logger = new Logger({ serviceName: SERVICE_NAME });
+
+let middyCacheEnabled = INTEG_TEST
   ? false
   : JSON.parse(process.env.MIDDY_CACHE_ENABLED);
-const middyCacheExpiration = IS_TEST
+
+let middyCacheExpiration = INTEG_TEST
   ? 0
   : JSON.parse(process.env.MIDDY_CACHE_EXPIRATION_MILLISECONDS);
-
-const logger = new Logger({ serviceName: SERVICE_NAME });
 
 const lambdaHandler = async (
   event: {
