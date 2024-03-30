@@ -8,14 +8,28 @@ const { GraphQlApiUrl, GraphQlApiPublicKey } = process.env;
 const we_invoke_request_consultation = async (
   consultationRequest: ConsultationRequest
 ) => {
-  const requestConsultation = await import(
-    '../../functions/requestConsultation'
+  const { handler } = await import('../../functions/requestConsultation');
+
+  const result = await handler(
+    {
+      arguments: consultationRequest
+    },
+    {
+      getRemainingTimeInMillis: () => 5000,
+      callbackWaitsForEmptyEventLoop: false,
+      functionName: 'requestConsultation',
+      functionVersion: 'test',
+      invokedFunctionArn: '',
+      memoryLimitInMB: '',
+      awsRequestId: '',
+      logGroupName: '',
+      logStreamName: '',
+      done: function (_error?: Error, _result?: any): void {},
+      fail: function (_error: string | Error): void {},
+      succeed: function (_messageOrObject: any): void {},
+      config: ''
+    }
   );
-
-  const result = await requestConsultation.handler({
-    arguments: consultationRequest
-  });
-
   return result;
 };
 

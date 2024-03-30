@@ -5,10 +5,13 @@ provider:
   name: aws
   runtime: nodejs20.x
   architecture: arm64
+  logRetentionInDays: 14
   environment:
     SERVICE_NAME: ${self:service}
     SERVICE_ROLE_ARN: ${self:custom.serviceRoleArn}
     SSM_STAGE: ${param:ssm-stage, sls:stage}
+    MIDDY_CACHE_ENABLED: true
+    MIDDY_CACHE_EXPIRATION_MILLISECONDS: 6000
 
 plugins:
   - serverless-appsync-plugin
@@ -91,12 +94,14 @@ functions:
       TABLE_NAME: !Ref OkWildscapesTable
     iamRoleStatements:
       - Effect: Allow
-        Action:
-          - dynamodb:PutItem
-          - sts:assumeRole
-        Resource:
-          - !GetAtt OkWildscapesTable.Arn
-          - ${self:custom.serviceRoleArn}
+        Action: dynamodb:PutItem
+        Resource: !GetAtt OkWildscapesTable.Arn
+      - Effect: Allow
+        Action: sts:assumeRole
+        Resource: ${self:custom.serviceRoleArn}
+      - Effect: Allow
+        Action: ssm:GetParameters*
+        Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:service}/${param:ssm-stage, sls:stage}/config
 
 resources:
   Resources:
