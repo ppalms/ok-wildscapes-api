@@ -31,6 +31,8 @@ custom:
     prod: ERROR
     default: ERROR
   serviceRoleArn: ${ssm:/${self:service}/${param:ssm-stage, sls:stage}/serviceRoleArn}
+  facebookAppId: ${ssm:/${self:service}/${param:ssm-stage, sls:stage}/facebookAppId}
+  facebookAppSecret: ${ssm:/${self:service}/${param:ssm-stage, sls:stage}/facebookAppSecret}
 
   # Plugin configuration
   esbuild:
@@ -113,12 +115,184 @@ resources:
             AttributeType: S
           - AttributeName: SK
             AttributeType: S
+          - AttributeName: GSI1PK
+            AttributeType: S
+          - AttributeName: GSI1SK
+            AttributeType: S
         KeySchema:
           - AttributeName: PK
             KeyType: HASH
           - AttributeName: SK
             KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: GSI1PK
+                KeyType: HASH
+              - AttributeName: GSI1SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
+
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.name}-user-pool-${sls:stage}
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 10
+            RequireLowercase: false
+            RequireNumbers: false
+            RequireSymbols: false
+            RequireUppercase: false
+        AutoVerifiedAttributes:
+          - email
+        Schema:
+          - Name: email
+            Required: true
+
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.name}-client-${sls:stage}
+        GenerateSecret: false
+        UserPoolId: !Ref UserPool
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        PreventUserExistenceErrors: ENABLED
+
+    FacebookIdentityProvider:
+      Type: AWS::Cognito::UserPoolIdentityProvider
+      Properties:
+        AttributeMapping:
+          email: email
+        ProviderName: Facebook
+        ProviderType: Facebook
+        ProviderDetails:
+          client_id: ${self:custom.facebookAppId}
+          client_secret: ${self:custom.facebookAppSecret}
+          authorize_scopes: public_profile,email
+        UserPoolId: !Ref UserPool
+
+    IdentityPool:
+      Type: AWS::Cognito::IdentityPool
+      Properties:
+        IdentityPoolName: ${self:custom.name}-identity-pool-${sls:stage}
+        AllowUnauthenticatedIdentities: false
+        CognitoIdentityProviders:
+          - ClientId: !Ref UserPoolClient
+            ProviderName: !GetAtt UserPool.ProviderName
+
+    AuthenticatedRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Federated: cognito-identity.amazonaws.com
+              Action: sts:AssumeRoleWithWebIdentity
+              Condition:
+                StringEquals:
+                  cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+                'ForAnyValue:StringLike':
+                  cognito-identity.amazonaws.com:amr: authenticated
+
+    UnauthenticatedRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Federated: cognito-identity.amazonaws.com
+              Action: sts:AssumeRoleWithWebIdentity
+              Condition:
+                StringEquals:
+                  cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+                'ForAnyValue:StringLike':
+                  cognito-identity.amazonaws.com:amr: unauthenticated
+
+    IdentityPoolRoleAttachment:
+      Type: AWS::Cognito::IdentityPoolRoleAttachment
+      Properties:
+        IdentityPoolId: !Ref IdentityPool
+        Roles:
+          authenticated: !GetAtt AuthenticatedRole.Arn
+          unauthenticated: !GetAtt UnauthenticatedRole.Arn
+
+    AssetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: Private
+        BucketName:
+          Fn::Sub: ${self:service}-assets-${sls:stage}
+
+    AssetsDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Comment: ${self:service} care guides and plant info sheets
+          Enabled: true
+          Origins:
+            - DomainName: !GetAtt AssetsBucket.RegionalDomainName
+              Id: S3Origin
+              OriginAccessControlId: !Ref OriginAccessControl
+              S3OriginConfig:
+                OriginAccessIdentity: ''
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: ['GET', 'HEAD', 'OPTIONS']
+            CachedMethods: ['GET', 'HEAD', 'OPTIONS']
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+            ResponseHeadersPolicyId: 5cc3b908-e619-4b99-88e5-2cf7f45965bd # Managed-CORS-With-Preflight
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+          PriceClass: PriceClass_100
+
+    OriginAccessControl:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: !Ref AssetsBucket
+          Description: OAC for ${self:service} assets
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
+
+    AssetsBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AssetsBucket
+        PolicyDocument:
+          Statement:
+            - Action: s3:GetObject
+              Effect: Allow
+              Resource: !Sub ${AssetsBucket.Arn}/*
+              Principal:
+                Service: cloudfront.amazonaws.com
+              Condition:
+                StringEquals:
+                  AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${AssetsDistribution}
+            - Effect: Deny
+              Principal: '*'
+              Action: 's3:*'
+              Resource:
+                - !Sub ${AssetsBucket.Arn}/*
+                - !GetAtt AssetsBucket.Arn
+              Condition:
+                Bool:
+                  aws:SecureTransport: false
 
   Outputs:
     GraphQlApiUrl:
