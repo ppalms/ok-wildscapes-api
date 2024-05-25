@@ -4,7 +4,7 @@ schema {
 }
 
 type Query {
-  listConsultations(limit: Int!): [ConsultationRequest]!
+  listPlantSheets(maxKeys: Int!): [PlantSheet!]!
 }
 
 type Mutation {
@@ -30,6 +30,11 @@ input ConsultationRequestInput {
   zipCode: String! # TODO AWSPostalCode!
   projectSize: ProjectSize!
   message: String!
+}
+
+type PlantSheet {
+  fileName: String!
+  lastModified: AWSDateTime!
 }
 
 enum ProjectSize {
