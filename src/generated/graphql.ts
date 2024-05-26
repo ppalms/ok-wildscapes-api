@@ -55,6 +55,12 @@ export type MutationRequestConsultationArgs = {
   consultationRequest: ConsultationRequestInput;
 };
 
+export type PlantSheet = {
+  __typename?: 'PlantSheet';
+  fileName: Scalars['String']['output'];
+  lastModified: Scalars['AWSDateTime']['output'];
+};
+
 export enum ProjectSize {
   Over_2K = 'OVER_2K',
   Under_1K = 'UNDER_1K',
@@ -63,10 +69,10 @@ export enum ProjectSize {
 
 export type Query = {
   __typename?: 'Query';
-  listConsultations: Array<Maybe<ConsultationRequest>>;
+  listPlantSheets: Array<PlantSheet>;
 };
 
 
-export type QueryListConsultationsArgs = {
-  limit: Scalars['Int']['input'];
+export type QueryListPlantSheetsArgs = {
+  maxKeys: Scalars['Int']['input'];
 };

@@ -1,11 +1,12 @@
-import * as sts from '@aws-sdk/client-sts';
-import * as ses from '@aws-sdk/client-ses';
-import * as dynamodb from '@aws-sdk/client-dynamodb';
 import { Logger } from '@aws-lambda-powertools/logger';
+import { injectLambdaContext } from '@aws-lambda-powertools/logger/middleware';
+import * as dynamodb from '@aws-sdk/client-dynamodb';
+import * as ses from '@aws-sdk/client-ses';
+import * as sts from '@aws-sdk/client-sts';
 import { marshall } from '@aws-sdk/util-dynamodb';
-import { Context } from 'aws-lambda';
 import middy from '@middy/core';
 import ssm from '@middy/ssm';
+import { Context } from 'aws-lambda';
 import { v4 } from 'uuid';
 import { ConsultationRequestInput } from '../src/generated/graphql';
 
@@ -150,6 +151,7 @@ Message: ${request.message}`
 };
 
 export const handler = middy()
+  .use(injectLambdaContext(logger, { logEvent: true }))
   .use(
     ssm({
       cache: middyCacheEnabled,
