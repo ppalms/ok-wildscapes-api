@@ -4,6 +4,7 @@ schema {
 }
 
 type Query {
+  listConsultations(limit: Int!): [ConsultationRequest]!
   listPlantSheets(maxKeys: Int!): [PlantSheet!]!
 }
 

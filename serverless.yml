@@ -66,6 +66,11 @@ appSync:
     retentionInDays: 14
 
   resolvers:
+    Query.listConsultations:
+      kind: UNIT
+      dataSource: okWildscapesTable
+      code: resolvers/listConsultations.ts
+
     Query.listPlantSheets:
       kind: UNIT
       dataSource: listPlantSheetsLambda
