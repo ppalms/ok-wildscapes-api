@@ -1,0 +1,30 @@
+requestConsultation:
+  handler: functions/requestConsultation.handler
+  environment:
+    TABLE_NAME: !Ref OkWildscapesTable
+  iamRoleStatements:
+    - Effect: Allow
+      Action: dynamodb:PutItem
+      Resource: !GetAtt OkWildscapesTable.Arn
+    - Effect: Allow
+      Action: sts:assumeRole
+      Resource: ${self:custom.serviceRoleArn}
+    - Effect: Allow
+      Action: ssm:GetParameters*
+      Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:service}/${param:ssm-stage, sls:stage}/config
+
+listPlantSheets:
+  handler: functions/listPlantSheets.handler
+  environment:
+    BUCKET_NAME: !Ref AssetsBucket
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+        - s3:ListObjects
+      Resource:
+        - !Sub ${AssetsBucket.Arn}/plant-sheets/*
+        - !GetAtt AssetsBucket.Arn
+    - Effect: Allow
+      Action: ssm:GetParameters*
+      Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:service}/${param:ssm-stage, sls:stage}/config

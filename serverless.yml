@@ -52,85 +52,9 @@ custom:
   serverless-iam-roles-per-function:
     defaultInherit: true
 
-appSync:
-  name: ok-wildscapes-api
-  schema: schema.api.graphql
-  authentication:
-    type: API_KEY
-  apiKeys:
-    - name: PublicKey
-      description: API key for public access
-      expiresAfter: 365d
-  logging:
-    level: ${self:custom.logLevel.${sls:stage}, self:custom.logLevel.default}
-    retentionInDays: 14
+appSync: ${file(serverless.appsync.yml)}
 
-  resolvers:
-    Query.listConsultations:
-      kind: UNIT
-      dataSource: okWildscapesTable
-      code: resolvers/listConsultations.ts
-
-    Query.listPlantSheets:
-      kind: UNIT
-      dataSource: listPlantSheetsLambda
-      code: resolvers/listPlantSheets.ts
-
-    Mutation.requestConsultation:
-      kind: UNIT
-      dataSource: requestConsultationLambda
-      code: resolvers/requestConsultation.ts
-
-  dataSources:
-    okWildscapesTable:
-      type: AMAZON_DYNAMODB
-      description: 'Main App Table'
-      config:
-        tableName: !Ref OkWildscapesTable
-
-    requestConsultationLambda:
-      type: AWS_LAMBDA
-      name: requestConsultationFunction
-      config:
-        functionName: requestConsultation
-
-    listPlantSheetsLambda:
-      type: AWS_LAMBDA
-      name: listPlantSheetsFunction
-      config:
-        functionName: listPlantSheets
-
-functions:
-  requestConsultation:
-    handler: functions/requestConsultation.handler
-    environment:
-      TABLE_NAME: !Ref OkWildscapesTable
-    iamRoleStatements:
-      - Effect: Allow
-        Action: dynamodb:PutItem
-        Resource: !GetAtt OkWildscapesTable.Arn
-      - Effect: Allow
-        Action: sts:assumeRole
-        Resource: ${self:custom.serviceRoleArn}
-      - Effect: Allow
-        Action: ssm:GetParameters*
-        Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:service}/${param:ssm-stage, sls:stage}/config
-
-  listPlantSheets:
-    handler: functions/listPlantSheets.handler
-    environment:
-      BUCKET_NAME: !Ref AssetsBucket
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - s3:ListBucket
-          - s3:ListObjects
-        Resource:
-          - !Sub ${AssetsBucket.Arn}/plant-sheets/*
-          - !GetAtt AssetsBucket.Arn
-      - Effect: Allow
-        Action: ssm:GetParameters*
-        Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:service}/${param:ssm-stage, sls:stage}/config
+functions: ${file(serverless.functions.yml)}
 
 resources:
   Resources:

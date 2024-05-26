@@ -1,0 +1,46 @@
+name: ok-wildscapes-api
+schema: schema.api.graphql
+authentication:
+  type: API_KEY
+apiKeys:
+  - name: PublicKey
+    description: API key for public access
+    expiresAfter: 365d
+logging:
+  level: ${self:custom.logLevel.${sls:stage}, self:custom.logLevel.default}
+  retentionInDays: 14
+
+resolvers:
+  Query.listConsultations:
+    kind: UNIT
+    dataSource: okWildscapesTable
+    code: resolvers/listConsultations.ts
+
+  Query.listPlantSheets:
+    kind: UNIT
+    dataSource: listPlantSheetsLambda
+    code: resolvers/listPlantSheets.ts
+
+  Mutation.requestConsultation:
+    kind: UNIT
+    dataSource: requestConsultationLambda
+    code: resolvers/requestConsultation.ts
+
+dataSources:
+  okWildscapesTable:
+    type: AMAZON_DYNAMODB
+    description: 'Main App Table'
+    config:
+      tableName: !Ref OkWildscapesTable
+
+  requestConsultationLambda:
+    type: AWS_LAMBDA
+    name: requestConsultationFunction
+    config:
+      functionName: requestConsultation
+
+  listPlantSheetsLambda:
+    type: AWS_LAMBDA
+    name: listPlantSheetsFunction
+    config:
+      functionName: listPlantSheets
