@@ -258,8 +258,6 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         AccessControl: Private
-        BucketName:
-          Fn::Sub: ${self:service}-assets-${sls:stage}
 
     AssetsDistribution:
       Type: AWS::CloudFront::Distribution
