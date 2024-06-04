@@ -12,6 +12,12 @@ provider:
     SSM_STAGE: ${param:ssm-stage, sls:stage}
     MIDDY_CACHE_ENABLED: true
     MIDDY_CACHE_EXPIRATION_MILLISECONDS: 6000
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: ssm:GetParameters*
+          Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:service}/${param:ssm-stage, sls:stage}/config
 
 plugins:
   - serverless-appsync-plugin
@@ -182,6 +188,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         AccessControl: Private
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: ['GET', 'PUT', 'POST']
+              AllowedOrigins: ['*']
+              MaxAge: 3000
 
     AssetsDistribution:
       Type: AWS::CloudFront::Distribution
@@ -219,7 +231,7 @@ resources:
           SigningBehavior: always
           SigningProtocol: sigv4
 
-    AssetsBucketPolicy:
+    CloudFrontAssetsBucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
         Bucket: !Ref AssetsBucket

@@ -10,6 +10,7 @@ type Query {
 
 type Mutation {
   requestConsultation(consultationRequest: ConsultationRequestInput!): ID
+  getPresignedUrl(key: String!, title: String!): PresignedUrlResponse
 }
 
 type ConsultationRequest {
@@ -36,6 +37,10 @@ input ConsultationRequestInput {
 type PlantSheet {
   fileName: String!
   lastModified: AWSDateTime!
+}
+
+type PresignedUrlResponse {
+  url: String!
 }
 
 enum ProjectSize {

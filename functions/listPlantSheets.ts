@@ -13,19 +13,26 @@ const lambdaHandler = async (
   _event: { arguments: { maxKeys: number } },
   _context: Context
 ) => {
-  const plantSheets = await client.send(
-    new ListObjectsV2Command({
-      Bucket: BUCKET_NAME,
-      Prefix: 'plant-sheets'
-    })
-  );
+  let plantSheets: { fileName: string; lastModified: string }[] = [];
+  try {
+    const s3Objects = await client.send(
+      new ListObjectsV2Command({
+        Bucket: BUCKET_NAME,
+        Prefix: 'plant-sheets'
+      })
+    );
 
-  return (
-    plantSheets.Contents.filter((obj) => !obj.Key.endsWith('/')).map((obj) => ({
-      fileName: obj.Key.split('/').pop()!,
-      lastModified: obj.LastModified!.toISOString()
-    })) ?? []
-  );
+    plantSheets = s3Objects.Contents.filter(
+      (obj) => !obj.Key.endsWith('/')
+    ).map((obj) => ({
+      fileName: obj.Key.split('/').pop(),
+      lastModified: obj.LastModified.toISOString()
+    }));
+  } catch (error) {
+    logger.error(error);
+  } finally {
+    return plantSheets;
+  }
 };
 
 export const handler = middy()
