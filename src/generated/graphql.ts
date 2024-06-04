@@ -47,7 +47,14 @@ export type ConsultationRequestInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  getPresignedUrl?: Maybe<PresignedUrlResponse>;
   requestConsultation?: Maybe<Scalars['ID']['output']>;
+};
+
+
+export type MutationGetPresignedUrlArgs = {
+  key: Scalars['String']['input'];
+  title: Scalars['String']['input'];
 };
 
 
@@ -61,6 +68,11 @@ export type PlantSheet = {
   lastModified: Scalars['AWSDateTime']['output'];
 };
 
+export type PresignedUrlResponse = {
+  __typename?: 'PresignedUrlResponse';
+  url: Scalars['String']['output'];
+};
+
 export enum ProjectSize {
   Over_2K = 'OVER_2K',
   Under_1K = 'UNDER_1K',
@@ -69,7 +81,13 @@ export enum ProjectSize {
 
 export type Query = {
   __typename?: 'Query';
+  listConsultations: Array<Maybe<ConsultationRequest>>;
   listPlantSheets: Array<PlantSheet>;
+};
+
+
+export type QueryListConsultationsArgs = {
+  limit: Scalars['Int']['input'];
 };
 
 

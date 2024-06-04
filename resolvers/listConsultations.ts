@@ -1,5 +1,6 @@
 import { Context, DynamoDBScanRequest } from '@aws-appsync/utils';
 import { ConsultationRequest } from '../src/generated/graphql';
+import { DynamoDBItem } from '../src/models';
 
 export const request = (ctx: Context): DynamoDBScanRequest => {
   const request: DynamoDBScanRequest = {
@@ -12,14 +13,16 @@ export const request = (ctx: Context): DynamoDBScanRequest => {
 };
 
 export const response = (ctx: Context): ConsultationRequest[] => {
-  return ctx.result.items.map((ddbItem: any) => ({
-    consultationId: ddbItem.PK.split('#')[1],
-    firstName: ddbItem.firstName,
-    lastName: ddbItem.lastName,
-    email: ddbItem.email,
-    phone: ddbItem.phone,
-    zipCode: ddbItem.zipCode,
-    projectSize: ddbItem.projectSize,
-    message: ddbItem.message
-  }));
+  return ctx.result.items.map(
+    (ddbItem: DynamoDBItem & ConsultationRequest) => ({
+      consultationId: ddbItem.PK.split('#')[1],
+      firstName: ddbItem.firstName,
+      lastName: ddbItem.lastName,
+      email: ddbItem.email,
+      phone: ddbItem.phone,
+      zipCode: ddbItem.zipCode,
+      projectSize: ddbItem.projectSize,
+      message: ddbItem.message
+    })
+  );
 };
