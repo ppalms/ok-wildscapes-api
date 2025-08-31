@@ -46,7 +46,7 @@ const lambdaHandler = async (
     request = <ConsultationRequestInput>event.arguments;
   } catch (error) {
     logger.error('Invalid request', error as Error);
-    return undefined;
+    throw new Error('Invalid consultation request format');
   }
 
   const consultationId = v4();
@@ -70,7 +70,7 @@ const lambdaHandler = async (
     logger.info(`Saved consultation request ${consultationReqItem.PK}`);
   } catch (error) {
     logger.error('Error saving consultation request', error as Error);
-    return undefined;
+    throw new Error('Failed to save consultation request to database');
   }
 
   try {
@@ -90,7 +90,7 @@ const lambdaHandler = async (
         'Failed to assume service role',
         JSON.stringify(assumedRole)
       );
-      return undefined;
+      throw new Error('Failed to assume service role for email sending');
     }
 
     logger.info('Emailing consultation request');
@@ -144,7 +144,7 @@ Message: ${request.message}`
     );
   } catch (error) {
     logger.critical('Consultation request email failed', error as Error);
-    return undefined;
+    throw new Error('Failed to send consultation request email');
   }
 
   return consultationId;
