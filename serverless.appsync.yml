@@ -2,10 +2,7 @@ name: ok-wildscapes-api
 schema: schema.api.graphql
 authentication:
   type: API_KEY
-apiKeys:
-  - name: PublicKey
-    description: API key for public access
-    expiresAfter: 365d
+# API key managed externally via SSM parameter
 logging:
   level: ${self:custom.logLevel.${sls:stage}, self:custom.logLevel.default}
   retentionInDays: 14

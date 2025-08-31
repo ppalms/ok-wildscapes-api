@@ -303,8 +303,6 @@ resources:
   Outputs:
     GraphQlApiUrl:
       Value: !GetAtt GraphQlApi.GraphQLUrl
-    GraphQlApiPublicKey:
-      Value: !GetAtt GraphQlApiPublicKey.ApiKey
     AlertingTopicArn:
       Value: !Ref AlertingTopic
       Description: SNS Topic ARN for alerts
