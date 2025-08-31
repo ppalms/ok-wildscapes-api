@@ -25,3 +25,21 @@
 This project uses the [GraphQL-Codegen](https://the-guild.dev/graphql/codegen/docs/getting-started) library to translate GraphQL object types into TypeScript types for functions, resolvers, and automated tests. When modifying the API, start by adding or updating the relevant types in the `schema.api.graphql` file.
 
 Run `yarn codegen` to automatically generate TypeScript types in the `src/generated/graphql.ts` file. Import types from `graphql.ts` into Lambda functions, AppSync resolvers, and automated tests.
+
+### Monitoring and Alerts
+
+The API includes CloudWatch alarms that monitor for:
+- Lambda function errors in the consultation form submission
+- AppSync API 4XX errors
+
+To receive email alerts when issues occur:
+
+```bash
+# Subscribe your email to alerts
+./scripts/setup-alerts.sh your-email@example.com
+
+# For production environment
+./scripts/setup-alerts.sh your-email@example.com prod
+```
+
+After running the script, check your email and confirm the SNS subscription.

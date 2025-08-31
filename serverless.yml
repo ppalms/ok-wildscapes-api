@@ -255,8 +255,56 @@ resources:
                 Bool:
                   aws:SecureTransport: false
 
+    # Monitoring and Alerting
+    AlertingTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:custom.name}-alerts-${sls:stage}
+        DisplayName: OK Wildscapes Alerts
+
+    ConsultationErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:custom.name}-consultation-errors-${sls:stage}
+        AlarmDescription: Alert when consultation form submissions fail
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref RequestConsultationLambdaFunction
+        AlarmActions:
+          - !Ref AlertingTopic
+        TreatMissingData: notBreaching
+
+    AppSyncErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:custom.name}-appsync-errors-${sls:stage}
+        AlarmDescription: Alert when AppSync API has errors
+        MetricName: 4XXError
+        Namespace: AWS/AppSync
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 5
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: GraphQLAPIId
+            Value: !GetAtt GraphQlApi.ApiId
+        AlarmActions:
+          - !Ref AlertingTopic
+        TreatMissingData: notBreaching
+
   Outputs:
     GraphQlApiUrl:
       Value: !GetAtt GraphQlApi.GraphQLUrl
     GraphQlApiPublicKey:
       Value: !GetAtt GraphQlApiPublicKey.ApiKey
+    AlertingTopicArn:
+      Value: !Ref AlertingTopic
+      Description: SNS Topic ARN for alerts
